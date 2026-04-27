@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ARGtv</string>
+    <string name="live">EN VIVO</string>
+    <string name="movies">PELÍCULAS</string>
+    <string name="series">SERIES</string>
+    <string name="favorites">FAVORITOS</string>
+    <string name="settings">AJUSTES</string>
+    <string name="search">BUSCAR</string>
+    <string name="no_channels">No hay canales disponibles</string>
+    <string name="no_internet">Sin conexión. Verificá tu red.</string>
+    <string name="loading">Cargando...</string>
+    <string name="error_loading">Error al cargar contenido</string>
+    <string name="retry">REINTENTAR</string>
+    <string name="channel_not_available">Canal no disponible</string>
+    <string name="play">REPRODUCIR</string>
+    <string name="continue_watching">CONTINUAR VIENDO</string>
+    <string name="add_favorite">AGREGAR A FAVORITOS</string>
+    <string name="remove_favorite">QUITAR DE FAVORITOS</string>
+    <string name="genre_noticias">NOTICIAS</string>
+    <string name="genre_deportes">DEPORTES</string>
+    <string name="genre_entretenimiento">ENTRETENIMIENTO</string>
+    <string name="genre_interior">INTERIOR</string>
+    <string name="genre_infantiles">INFANTILES</string>
+    <string name="genre_musica">MÚSICA</string>
+    <string name="genre_religioso">RELIGIOSO</string>
+    <string name="genre_accion">ACCIÓN</string>
+    <string name="genre_comedia">COMEDIA</string>
+    <string name="genre_terror">TERROR</string>
+    <string name="genre_drama">DRAMA</string>
+    <string name="genre_romance">ROMANCE</string>
+    <string name="genre_documentales">DOCUMENTALES</string>
+</resources>

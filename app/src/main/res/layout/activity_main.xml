@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ARGtv - Canales Argentinos"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:padding="16dp"
+        android:background="#1a1a1a" />
+
+    <ListView
+        android:id="@+id/channel_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:divider="#333333"
+        android:dividerHeight="1dp" />
+
+</LinearLayout>

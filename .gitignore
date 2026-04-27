@@ -1,0 +1,58 @@
+# Android/Gradle gitignore
+
+# Built objects
+bin/
+gen/
+out/
+build/
+.gradle/
+.navigation/
+
+# Gradle
+.gradle/
+build/
+local.properties
+.bundle/
+vendor/bundle/
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.jks
+*.keystore
+!debug.keystore
+
+# Local configuration
+local.properties
+
+# Agents and workspace tools
+.agents/
+.gemini/
+.antigravity/
+
+# Local/Unusual directories
+Android/
+CAndroid/
+nul
