@@ -4,22 +4,40 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="16dp"
-    android:background="#1a1a1a"
+    android:background="#000000"
     android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/channel_name"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp" />
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/channel_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:ellipsize="end"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/channel_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#888888"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp" />
+
+    </LinearLayout>
 
     <TextView
-        android:id="@+id/channel_category"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#888888"
-        android:textSize="14sp" />
+        android:text="▶"
+        android:textColor="#4CAF50"
+        android:textSize="20sp"
+        android:layout_marginStart="8dp" />
 
 </LinearLayout>

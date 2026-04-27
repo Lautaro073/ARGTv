@@ -5,20 +5,39 @@
     android:orientation="vertical"
     android:background="#000000">
 
+    <!-- Header -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ARGtv - Canales Argentinos"
+        android:text="ARGtv"
         android:textColor="#FFFFFF"
-        android:textSize="24sp"
-        android:padding="16dp"
-        android:background="#1a1a1a" />
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:padding="20dp"
+        android:background="#121212" />
 
+    <!-- Search Bar -->
+    <EditText
+        android:id="@+id/search_input"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:hint="Buscar canal..."
+        android:textColorHint="#666666"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:paddingHorizontal="16dp"
+        android:background="#1a1a1a"
+        android:inputType="text"
+        android:imeOptions="actionSearch"
+        android:maxLines="1" />
+
+    <!-- Channel List -->
     <ListView
         android:id="@+id/channel_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:divider="#333333"
-        android:dividerHeight="1dp" />
+        android:divider="#1a1a1a"
+        android:dividerHeight="1dp"
+        android:background="#000000" />
 
 </LinearLayout>
