@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun openPlayer(channel: Channel) {
         val intent = Intent(this, PlayerActivity::class.java)
+        intent.putExtra("channel_id", channel.id)
         intent.putExtra("channel_url", channel.url)
         intent.putExtra("channel_name", channel.name)
         startActivity(intent)
