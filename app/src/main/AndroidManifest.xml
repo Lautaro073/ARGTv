@@ -12,6 +12,7 @@
         android:name=".ARGtvApplication"
         android:allowBackup="true"
         android:label="ARGtv"
+        android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.ARGtv">
