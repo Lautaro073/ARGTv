@@ -2,15 +2,18 @@ package com.argtv.ui.main
 
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.argtv.R
 import com.argtv.data.model.Channel
 import com.argtv.data.api.M3UClient
@@ -29,6 +32,17 @@ class MainActivity : AppCompatActivity() {
     
     private val allChannels = mutableListOf<Channel>()
     private var currentCategory: String? = null
+
+    private val categoryNames = mapOf(
+        "noticias" to "Noticias",
+        "deportes" to "Deportes",
+        "entretenimiento" to "Entretenimiento",
+        "interior" to "Canales del Interior",
+        "infantiles" to "Niños",
+        "musica" to "Música",
+        "religioso" to "Religión",
+        "general" to "General"
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,12 +90,11 @@ class MainActivity : AppCompatActivity() {
     private fun setupCategories() {
         categoryButtons.removeAllViews()
         
-        // "Todos" button
         addCategoryButton("Todos", null)
         
-        // Category buttons
         allChannels.map { it.category }.distinct().sorted().forEach { category ->
-            addCategoryButton(category.replaceFirstChar { it.uppercase() }, category)
+            val displayName = categoryNames[category] ?: category.replaceFirstChar { it.uppercase() }
+            addCategoryButton(displayName, category)
         }
         
         updateCarousel()
@@ -90,12 +103,12 @@ class MainActivity : AppCompatActivity() {
     private fun addCategoryButton(name: String, category: String?) {
         val btn = TextView(this).apply {
             text = name
-            textSize = 16f
-            setPadding(32, 16, 32, 16)
+            textSize = 18f
+            setPadding(36, 16, 36, 16)
             
             val isSelected = currentCategory == category
-            setTextColor(if (isSelected) Color.parseColor("#FCD116") else Color.parseColor("#888888"))
-            background = if (isSelected) resources.getDrawable(R.drawable.category_selected, null) else null
+            setTextColor(if (isSelected) Color.parseColor("#FCD116") else Color.parseColor("#FFFFFF"))
+            setBackgroundColor(if (isSelected) Color.parseColor("#252525") else Color.TRANSPARENT)
             
             setOnClickListener {
                 currentCategory = category
@@ -106,8 +119,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateCarousel() {
-        val category = currentCategory ?: "Todos"
-        categoryTitle.text = category
+        val displayName = if (currentCategory == null) {
+            "Todos los canales"
+        } else {
+            categoryNames[currentCategory] ?: currentCategory!!.replaceFirstChar { it.uppercase() }
+        }
+        categoryTitle.text = displayName
         
         val filtered = if (currentCategory == null) {
             allChannels
@@ -144,9 +161,22 @@ class MainActivity : AppCompatActivity() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             fun bind(channel: Channel) {
-                itemView.findViewById<TextView>(R.id.channel_name).text = channel.name
-                itemView.findViewById<TextView>(R.id.channel_category).text = channel.category
-                itemView.findViewById<TextView>(R.id.channel_icon).text = channel.name.firstOrNull()?.uppercase() ?: "📺"
+                val nameView = itemView.findViewById<TextView>(R.id.channel_name)
+                val categoryView = itemView.findViewById<TextView>(R.id.channel_category)
+                val iconView = itemView.findViewById<ImageView>(R.id.channel_icon)
+                
+                nameView.text = channel.name
+                categoryView.text = categoryNames[channel.category] ?: channel.category
+                
+                if (channel.logo.isNotEmpty()) {
+                    iconView.load(channel.logo) {
+                        placeholder(android.R.drawable.ic_menu_gallery)
+                        error(android.R.drawable.ic_menu_gallery)
+                    }
+                } else {
+                    iconView.setImageResource(android.R.drawable.ic_menu_gallery)
+                }
+                
                 itemView.setOnClickListener { onClick(channel) }
             }
         }
