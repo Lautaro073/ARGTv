@@ -31,6 +31,7 @@ vendor/bundle/
 .externalNativeBuild/
 .cxx/
 captures/
+.vscode/
 
 # Logs
 *.log
@@ -47,10 +48,13 @@ Thumbs.db
 # Local configuration
 local.properties
 
+
 # Agents and workspace tools
 .agents/
 .gemini/
 .antigravity/
+opencode.json
+install_sdk.bat
 
 # Local/Unusual directories
 Android/
