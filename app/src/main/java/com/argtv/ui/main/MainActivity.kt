@@ -1,15 +1,15 @@
 package com.argtv.ui.main
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.argtv.R
 import com.argtv.data.model.Channel
@@ -22,39 +22,30 @@ import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var channelGrid: RecyclerView
-    private lateinit var searchInput: EditText
-    private lateinit var categoryTabs: LinearLayout
+    private lateinit var carousel: RecyclerView
+    private lateinit var categoryTitle: TextView
+    private lateinit var categoryButtons: LinearLayout
     private lateinit var adapter: ChannelAdapter
     
     private val allChannels = mutableListOf<Channel>()
-    private val filteredChannels = mutableListOf<Channel>()
-    private var selectedCategory: String? = null
+    private var currentCategory: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        channelGrid = findViewById(R.id.channel_grid)
-        searchInput = findViewById(R.id.search_input)
-        categoryTabs = findViewById(R.id.category_tabs)
+        carousel = findViewById(R.id.channel_carousel)
+        categoryTitle = findViewById(R.id.category_title)
+        categoryButtons = findViewById(R.id.category_buttons)
         
-        setupGrid()
-        setupSearch()
+        setupCarousel()
         loadChannels()
     }
 
-    private fun setupGrid() {
+    private fun setupCarousel() {
         adapter = ChannelAdapter { channel -> openPlayer(channel) }
-        channelGrid.layoutManager = GridLayoutManager(this, 2)
-        channelGrid.adapter = adapter
-    }
-
-    private fun setupSearch() {
-        searchInput.setOnEditorActionListener { _, _, _ ->
-            filterChannels()
-            true
-        }
+        carousel.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        carousel.adapter = adapter
     }
 
     private fun openPlayer(channel: Channel) {
@@ -63,53 +54,6 @@ class MainActivity : AppCompatActivity() {
             putExtra("channel_url", channel.url)
             putExtra("channel_name", channel.name)
         })
-    }
-
-    private fun filterChannels() {
-        val query = searchInput.text.toString().lowercase()
-        
-        filteredChannels.clear()
-        
-        val filtered = allChannels.filter { channel ->
-            val matchesQuery = query.isEmpty() || 
-                channel.name.lowercase().contains(query) || 
-                channel.category.lowercase().contains(query)
-            val matchesCategory = selectedCategory == null || 
-                channel.category == selectedCategory
-            matchesQuery && matchesCategory
-        }
-        
-        filteredChannels.addAll(filtered)
-        adapter.notifyDataSetChanged()
-    }
-
-    private fun setupCategories() {
-        categoryTabs.removeAllViews()
-        
-        // "All" tab
-        addCategoryTab("Todos", null)
-        
-        // Category tabs
-        allChannels.map { it.category }.distinct().sorted().forEach { category ->
-            addCategoryTab(category.replaceFirstChar { it.uppercase() }, category)
-        }
-        
-        filterChannels()
-    }
-
-    private fun addCategoryTab(name: String, category: String?) {
-        val tab = TextView(this).apply {
-            text = name
-            setTextColor(if (category == selectedCategory) 0xFFFCD116.toInt() else 0xFF888888.toInt())
-            textSize = 14f
-            setPadding(24, 12, 24, 12)
-            setOnClickListener {
-                selectedCategory = category
-                setupCategories() // Re-render tabs to update selection
-                filterChannels()
-            }
-        }
-        categoryTabs.addView(tab)
     }
 
     private fun loadChannels() {
@@ -121,10 +65,7 @@ class MainActivity : AppCompatActivity() {
                 result.getOrNull()?.let { channels ->
                     allChannels.clear()
                     allChannels.addAll(channels)
-                    filteredChannels.clear()
-                    filteredChannels.addAll(channels)
                     setupCategories()
-                    adapter.notifyDataSetChanged()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -132,9 +73,62 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupCategories() {
+        categoryButtons.removeAllViews()
+        
+        // "Todos" button
+        addCategoryButton("Todos", null)
+        
+        // Category buttons
+        allChannels.map { it.category }.distinct().sorted().forEach { category ->
+            addCategoryButton(category.replaceFirstChar { it.uppercase() }, category)
+        }
+        
+        updateCarousel()
+    }
+
+    private fun addCategoryButton(name: String, category: String?) {
+        val btn = TextView(this).apply {
+            text = name
+            textSize = 16f
+            setPadding(32, 16, 32, 16)
+            
+            val isSelected = currentCategory == category
+            setTextColor(if (isSelected) Color.parseColor("#FCD116") else Color.parseColor("#888888"))
+            background = if (isSelected) resources.getDrawable(R.drawable.category_selected, null) else null
+            
+            setOnClickListener {
+                currentCategory = category
+                setupCategories()
+            }
+        }
+        categoryButtons.addView(btn)
+    }
+
+    private fun updateCarousel() {
+        val category = currentCategory ?: "Todos"
+        categoryTitle.text = category
+        
+        val filtered = if (currentCategory == null) {
+            allChannels
+        } else {
+            allChannels.filter { it.category == currentCategory }
+        }
+        
+        adapter.submitList(filtered)
+    }
+
     inner class ChannelAdapter(
         private val onClick: (Channel) -> Unit
     ) : RecyclerView.Adapter<ChannelAdapter.ViewHolder>() {
+
+        private var channels = mutableListOf<Channel>()
+
+        fun submitList(list: List<Channel>) {
+            channels.clear()
+            channels.addAll(list)
+            notifyDataSetChanged()
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(parent.context)
@@ -143,16 +137,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val channel = filteredChannels[position]
-            holder.bind(channel)
+            holder.bind(channels[position])
         }
 
-        override fun getItemCount() = filteredChannels.size
+        override fun getItemCount() = channels.size
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             fun bind(channel: Channel) {
                 itemView.findViewById<TextView>(R.id.channel_name).text = channel.name
                 itemView.findViewById<TextView>(R.id.channel_category).text = channel.category
+                itemView.findViewById<TextView>(R.id.channel_icon).text = channel.name.firstOrNull()?.uppercase() ?: "📺"
                 itemView.setOnClickListener { onClick(channel) }
             }
         }

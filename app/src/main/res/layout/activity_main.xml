@@ -5,88 +5,40 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- Header with logo -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="16dp"
-        android:background="#121212">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ARG"
-            android:textColor="#74ACDF"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="tv"
-            android:textColor="#FCD116"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-    </LinearLayout>
-
-    <!-- Search with icon -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#1a1a1a"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="12dp">
-
-        <EditText
-            android:id="@+id/search_input"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:hint="Buscar canales..."
-            android:textColorHint="#666666"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:paddingStart="48dp"
-            android:paddingEnd="16dp"
-            android:background="@drawable/search_bg"
-            android:inputType="text"
-            android:imeOptions="actionSearch"
-            android:maxLines="1" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="16dp"
-            android:text="🔍"
-            android:textSize="20sp" />
-
-    </FrameLayout>
-
-    <!-- Category tabs -->
+    <!-- Category buttons row -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="none"
-        android:background="#151515">
+        android:background="#121212">
 
         <LinearLayout
-            android:id="@+id/category_tabs"
+            android:id="@+id/category_buttons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="12dp" />
+            android:padding="16dp" />
 
     </HorizontalScrollView>
 
-    <!-- Channels grid -->
+    <!-- Title with current category -->
+    <TextView
+        android:id="@+id/category_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Todos los canales"
+        android:textColor="#FCD116"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="16dp" />
+
+    <!-- Channels carousel horizontal -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/channel_grid"
+        android:id="@+id/channel_carousel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp"
+        android:padding="16dp"
         android:clipToPadding="false" />
 
 </LinearLayout>
