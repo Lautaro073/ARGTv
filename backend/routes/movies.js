@@ -1,5 +1,6 @@
 import express from 'express';
 import * as tmdb from '../services/tmdb.js';
+import { getMovieStream } from '../services/media.js';
 
 const router = express.Router();
 
@@ -34,7 +35,18 @@ router.get('/:id', async (req, res) => {
 });
 
 router.get('/:id/play', async (req, res) => {
-  res.status(501).json({ error: 'Playback no implementado', message: 'Necesita scraping de embed URLs' });
+  try {
+    const { id } = req.params;
+    const movie = await tmdb.getMovieDetails(id);
+    const streamUrl = await getMovieStream(movie.title);
+    if (streamUrl) {
+      res.json({ url: streamUrl, title: movie.title });
+    } else {
+      res.status(404).json({ error: 'Stream no encontrado', message: 'No se pudo encontrar un stream para esta película' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error playing movie', message: error.message });
+  }
 });
 
 export default router;
