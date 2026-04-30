@@ -1,8 +1,9 @@
 import express from 'express';
 import * as tmdb from '../services/tmdb.js';
-import { getSeriesStream } from '../services/media.js';
 
 const router = express.Router();
+
+const VIDSRC_BASE = "https://vidsrc.mov";
 
 router.get('/', async (req, res) => {
   try {
@@ -43,18 +44,10 @@ router.get('/:id/season/:season', async (req, res) => {
   }
 });
 
-router.get('/:id/:season/:episode/play', async (req, res) => {
-  try {
-    const series = await tmdb.getSeriesDetails(req.params.id);
-    const streamUrl = await getSeriesStream(series.name);
-    if (streamUrl) {
-      res.json({ url: streamUrl, title: series.name });
-    } else {
-      res.status(404).json({ error: 'Stream no encontrado' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Error playing series', message: error.message });
-  }
+// VidSrc embed URL para serie
+router.get('/:id/embed', (req, res) => {
+  const embedUrl = `${VIDSRC_BASE}/embed/tv/${req.params.id}`;
+  res.json({ url: embedUrl, type: 'series' });
 });
 
 export default router;

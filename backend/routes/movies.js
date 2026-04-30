@@ -1,8 +1,9 @@
 import express from 'express';
 import * as tmdb from '../services/tmdb.js';
-import { getMovieStream } from '../services/media.js';
 
 const router = express.Router();
+
+const VIDSRC_BASE = "https://vidsrc.mov";
 
 router.get('/', async (req, res) => {
   try {
@@ -34,18 +35,14 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.get('/:id/play', async (req, res) => {
+// VidSrc embed URL para WebView
+router.get('/:id/embed', async (req, res) => {
   try {
     const { id } = req.params;
-    const movie = await tmdb.getMovieDetails(id);
-    const streamUrl = await getMovieStream(movie.title);
-    if (streamUrl) {
-      res.json({ url: streamUrl, title: movie.title });
-    } else {
-      res.status(404).json({ error: 'Stream no encontrado', message: 'No se pudo encontrar un stream para esta película' });
-    }
+    const embedUrl = `${VIDSRC_BASE}/embed/movie/${id}`;
+    res.json({ url: embedUrl, type: 'movie' });
   } catch (error) {
-    res.status(500).json({ error: 'Error playing movie', message: error.message });
+    res.status(500).json({ error: 'Error getting embed', message: error.message });
   }
 });
 
