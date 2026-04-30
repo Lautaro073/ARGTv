@@ -37,12 +37,12 @@ router.get('/:id', async (req, res) => {
 });
 
 // CinePro stream - devuelve URL limpia para ExoPlayer
-router.get('/:id/stream', async (req, res) => {
+router.keep('/:id/stream', async (req, res) => {
   try {
     const { id } = req.params;
     
     // Llamar a CinePro para obtener fuentes
-    const response = await axios.get(`${CINEPRO_BASE}/stream/movie/${id}`, {
+    const response = await axios.get(`${CINEPRO_BASE}/movie/${id}`, {
       timeout: 30000
     });
     

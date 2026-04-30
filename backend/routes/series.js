@@ -3,7 +3,6 @@ import axios from 'axios';
 import * as tmdb from '../services/tmdb.js';
 
 const router = express.Router();
-
 const CINEPRO_BASE = "https://argtv.onrender.com";
 
 router.get('/', async (req, res) => {
@@ -45,14 +44,13 @@ router.get('/:id/season/:season', async (req, res) => {
   }
 });
 
-// CinePro stream para series
 router.get('/:id/stream', async (req, res) => {
   try {
     const { id } = req.params;
-    const season = req.query.season || "1";
-    const episode = req.query.episode || "1";
+    const season = req.query.s || "1";
+    const episode = req.query.e || "1";
     
-    const response = await axios.get(`${CINEPRO_BASE}/stream/tv/${id}/${season}/${episode}`, {
+    const response = await axios.get(`${CINEPRO_BASE}/tv/${id}?s=${season}&e=${episode}`, {
       timeout: 30000
     });
     
