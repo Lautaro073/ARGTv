@@ -54,9 +54,21 @@ class WebPlayerActivity : AppCompatActivity() {
         
         webView.webChromeClient = WebChromeClient()
         
+        // Block ads
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                if (url?.contains("ads") == true || url?.contains("pop") == true) {
+                    return true
+                }
+                return false
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                // Remove ad elements via JS
+                webView.evaluateJavascript("""
+                    document.querySelectorAll('[class*=ad], [id*=ad], .ads, .advertisement').forEach(el => el.remove());
+                """, null)
             }
 
             override fun onReceivedError(
@@ -64,8 +76,10 @@ class WebPlayerActivity : AppCompatActivity() {
                 request: WebResourceRequest?, 
                 error: WebResourceError?
             ) {
+                if (request?.url?.toString()?.contains("ads") == true) {
+                    return
+                }
                 super.onReceivedError(view, request, error)
-                Toast.makeText(this@WebPlayerActivity, "Error cargando: ${error?.description}", Toast.LENGTH_LONG).show()
             }
         }
     }

@@ -3,7 +3,7 @@ import * as tmdb from '../services/tmdb.js';
 
 const router = express.Router();
 
-const VIDSRC_BASE = "https://vidsrc.mov";
+const VIDSRC_BASE = "https://vidplay.site";
 
 router.get('/', async (req, res) => {
   try {
