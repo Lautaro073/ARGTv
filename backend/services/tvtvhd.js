@@ -10,6 +10,10 @@ const HEADERS = {
 const CACHE = new Map();
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
 
+export function clearCache() {
+  CACHE.clear();
+}
+
 export async function getStreamUrl(slug) {
   const cached = CACHE.get(slug);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {

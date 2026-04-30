@@ -1,5 +1,6 @@
 import express from 'express';
-import { getStreamUrl } from '../services/tvtvhd.js';
+import axios from 'axios';
+import { getStreamUrl, clearCache } from '../services/tvtvhd.js';
 
 const router = express.Router();
 
@@ -10,6 +11,8 @@ const STREAM_HEADERS = {
 
 router.get('/:slug', async (req, res) => {
   try {
+    // Always get fresh URL (no cache for streams)
+    clearCache();
     const streamUrl = await getStreamUrl(req.params.slug);
     res.json({ 
       url: streamUrl,
@@ -17,6 +20,28 @@ router.get('/:slug', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Stream no disponible', message: error.message });
+  }
+});
+
+// Proxy endpoint - streams through backend to avoid CORS
+router.get('/:slug/proxy', async (req, res) => {
+  try {
+    clearCache();
+    const streamUrl = await getStreamUrl(req.params.slug);
+    
+    // Fetch and forward the stream
+    const response = await axios.get(streamUrl, {
+      headers: STREAM_HEADERS,
+      responseType: 'stream',
+      timeout: 30000
+    });
+    
+    res.setHeader('Content-Type', response.headers['content-type'] || 'application/vnd.apple.mpegurl');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    
+    response.data.pipe(res);
+  } catch (error) {
+    res.status(500).json({ error: 'Stream proxy error', message: error.message });
   }
 });
 
