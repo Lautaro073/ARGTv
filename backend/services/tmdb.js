@@ -38,42 +38,42 @@ const mapSeries = (tmdb) => ({
 
 export async function getPopularMovies(page = 1) {
   const response = await axios.get(`${TMDB_BASE}/movie/popular`, {
-    params: { api_key: API_KEY, language: 'es-ES', page }
+    params: { api_key: API_KEY, language: 'es-419', page }
   });
   return response.data.results.map(mapMovie);
 }
 
 export async function getMovieDetails(id) {
   const response = await axios.get(`${TMDB_BASE}/movie/${id}`, {
-    params: { api_key: API_KEY, language: 'es-ES' }
+    params: { api_key: API_KEY, language: 'es-419' }
   });
   return mapMovie(response.data);
 }
 
 export async function searchMovies(query, page = 1) {
   const response = await axios.get(`${TMDB_BASE}/search/movie`, {
-    params: { api_key: API_KEY, language: 'es-ES', query, page }
+    params: { api_key: API_KEY, language: 'es-419', query, page }
   });
   return response.data.results.map(mapMovie);
 }
 
 export async function getPopularSeries(page = 1) {
   const response = await axios.get(`${TMDB_BASE}/tv/popular`, {
-    params: { api_key: API_KEY, language: 'es-ES', page }
+    params: { api_key: API_KEY, language: 'es-419', page }
   });
   return response.data.results.map(mapSeries);
 }
 
 export async function getSeriesDetails(id) {
   const response = await axios.get(`${TMDB_BASE}/tv/${id}`, {
-    params: { api_key: API_KEY, language: 'es-ES' }
+    params: { api_key: API_KEY, language: 'es-419' }
   });
   return mapSeries(response.data);
 }
 
 export async function getSeriesEpisodes(id, seasonNumber) {
   const response = await axios.get(`${TMDB_BASE}/tv/${id}/season/${seasonNumber}`, {
-    params: { api_key: API_KEY, language: 'es-ES' }
+    params: { api_key: API_KEY, language: 'es-419' }
   });
   return response.data.episodes.map(ep => ({
     episodeNumber: ep.episode_number,
@@ -86,7 +86,7 @@ export async function getSeriesEpisodes(id, seasonNumber) {
 
 export async function searchSeries(query, page = 1) {
   const response = await axios.get(`${TMDB_BASE}/search/tv`, {
-    params: { api_key: API_KEY, language: 'es-ES', query, page }
+    params: { api_key: API_KEY, language: 'es-419', query, page }
   });
   return response.data.results.map(mapSeries);
 }
