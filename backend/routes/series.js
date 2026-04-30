@@ -1,9 +1,10 @@
 import express from 'express';
+import axios from 'axios';
 import * as tmdb from '../services/tmdb.js';
 
 const router = express.Router();
 
-const VIDSRC_BASE = "https://vidsrc.mov";
+const CINEPRO_BASE = "https://argtv.onrender.com";
 
 router.get('/', async (req, res) => {
   try {
@@ -44,10 +45,39 @@ router.get('/:id/season/:season', async (req, res) => {
   }
 });
 
-// VidSrc embed URL para serie
-router.get('/:id/embed', (req, res) => {
-  const embedUrl = `${VIDSRC_BASE}/embed/tv/${req.params.id}`;
-  res.json({ url: embedUrl, type: 'series' });
+// CinePro stream para series
+router.get('/:id/stream', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const season = req.query.season || "1";
+    const episode = req.query.episode || "1";
+    
+    const response = await axios.get(`${CINEPRO_BASE}/stream/tv/${id}/${season}/${episode}`, {
+      timeout: 30000
+    });
+    
+    const sources = response.data.sources || [];
+    
+    const bestSource = sources
+      .filter(s => s.type === 'hls')
+      .sort((a, b) => {
+        const qualA = parseInt(a.quality?.replace('p', '') || '0');
+        const qualB = parseInt(b.quality?.replace('p', '') || '0');
+        return qualB - qualA;
+      })[0];
+    
+    if (bestSource) {
+      res.json({
+        url: bestSource.url,
+        quality: bestSource.quality,
+        headers: bestSource.headers
+      });
+    } else {
+      res.status(404).json({ error: 'No stream available' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Stream error', message: error.message });
+  }
 });
 
 export default router;

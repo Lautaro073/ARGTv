@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.argtv.R
 import com.argtv.ui.player.PlayerActivity
-import com.argtv.ui.player.WebPlayerActivity
 import com.argtv.data.api.ApiClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -285,20 +284,24 @@ class MainActivity : AppCompatActivity() {
             try {
                 loadingView.visibility = View.VISIBLE
                 
-                val embedUrl = if (currentSection == "movies") 
-                    apiClient.getMovieEmbedUrl(item.media.id)
+                val streamData = if (currentSection == "movies") 
+                    apiClient.getMovieStreamData(item.media.id)
                 else 
-                    apiClient.getSeriesEmbedUrl(item.media.id)
+                    apiClient.getSeriesStreamData(item.media.id)
                 
                 withContext(Dispatchers.Main) {
                     loadingView.visibility = View.GONE
-                    if (embedUrl.isNotEmpty()) {
-                        startActivity(Intent(this@MainActivity, WebPlayerActivity::class.java).apply {
-                            putExtra("embed_url", embedUrl)
-                            putExtra("title", item.media.title)
+                    if (streamData != null) {
+                        startActivity(Intent(this@MainActivity, PlayerActivity::class.java).apply {
+                            putExtra("channel_name", item.media.title)
+                            putExtra("stream_url", streamData.url)
+                            putExtra("quality", streamData.quality)
+                            for ((key, value) in streamData.headers) {
+                                putExtra("header_$key", value)
+                            }
                         })
                     } else {
-                        Toast.makeText(this@MainActivity, "No disponible: ${item.media.title}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@MainActivity, "Stream no disponible: ${item.media.title}", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {

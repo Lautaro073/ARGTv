@@ -24,7 +24,6 @@ class PlayerActivity : AppCompatActivity() {
 
     companion object {
         private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        private const val REFERER = "https://tvtvhd.com/"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,36 +32,47 @@ class PlayerActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_player)
 
-        val channelUrl: String = intent.getStringExtra("stream_url") ?: ""
-        val channelName: String = intent.getStringExtra("channel_name") ?: "Unknown"
-        val channelId: String = intent.getStringExtra("channel_id") ?: channelUrl
-
-        Log.d(TAG, "Playing: $channelName  URL: $channelUrl")
+        val streamUrl: String = intent.getStringExtra("stream_url") ?: ""
+        val title: String = intent.getStringExtra("channel_name") ?: "Unknown"
+        val quality: String = intent.getStringExtra("quality") ?: ""
         
-        if (channelUrl.isNotEmpty()) {
-            Toast.makeText(this, "Cargando: $channelName", Toast.LENGTH_SHORT).show()
-            initializePlayer(channelUrl, channelId)
+        // Get headers from intent
+        val headers = mutableMapOf<String, String>()
+        intent.extras?.keySet()?.forEach { key ->
+            if (key.startsWith("header_")) {
+                headers[key.removePrefix("header_")] = intent.getStringExtra(key) ?: ""
+            }
+        }
+
+        val channelId = streamUrl // Use URL as ID for position saving
+        
+        Log.d(TAG, "Playing: $title")
+        Log.d(TAG, "Quality: $quality")
+        Log.d(TAG, "Headers: $headers")
+        
+        if (streamUrl.isNotEmpty()) {
+            Toast.makeText(this, "Reproduciendo: $title${if (quality.isNotEmpty()) " ($quality)" else ""}", Toast.LENGTH_SHORT).show()
+            initializePlayer(streamUrl, channelId, headers)
         } else {
             Toast.makeText(this, "Stream no disponible", Toast.LENGTH_LONG).show()
             finish()
         }
     }
 
-    private fun initializePlayer(url: String, channelId: String) {
+    private fun initializePlayer(url: String, channelId: String, headers: Map<String, String>) {
         try {
-            // Configuración de headers como localTv
+            // Build data source with headers from CinePro
+            val requestProperties = headers.toMutableMap()
+            
             val httpDataSourceFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(USER_AGENT)
                 .setAllowCrossProtocolRedirects(true)
-                .setDefaultRequestProperties(mapOf(
-                    "Referer" to REFERER,
-                    "Origin" to "https://tvtvhd.com"
-                ))
-                .setConnectTimeoutMs(15000)
-                .setReadTimeoutMs(15000)
+                .setDefaultRequestProperties(requestProperties)
+                .setConnectTimeoutMs(20000)
+                .setReadTimeoutMs(20000)
 
             val loadControl = DefaultLoadControl.Builder()
-                .setBufferDurationsMs(1000, 15000, 500, 1000)
+                .setBufferDurationsMs(2000, 30000, 1000, 5000)
                 .build()
 
             val mediaItem = MediaItem.fromUri(url)
@@ -107,9 +117,9 @@ class PlayerActivity : AppCompatActivity() {
                 Player.STATE_BUFFERING -> runOnUiThread { 
                     Toast.makeText(this@PlayerActivity, "Buffering...", Toast.LENGTH_SHORT).show() 
                 }
-                Player.STATE_READY -> Log.d(TAG, "Ready to play")
+                Player.STATE_READY -> Log.d(TAG, "Ready")
                 Player.STATE_ENDED -> runOnUiThread { 
-                    Toast.makeText(this@PlayerActivity, "Ended", Toast.LENGTH_SHORT).show() 
+                    Toast.makeText(this@PlayerActivity, "Finalizado", Toast.LENGTH_SHORT).show() 
                 }
             }
         }
@@ -122,7 +132,6 @@ class PlayerActivity : AppCompatActivity() {
                     PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> "Timeout"
                     PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND -> "No encontrado"
                     PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED -> "Formato"
-                    PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED -> "Manifest"
                     else -> error.message ?: "Error"
                 }
                 Toast.makeText(this@PlayerActivity, "Error: $msg", Toast.LENGTH_LONG).show()

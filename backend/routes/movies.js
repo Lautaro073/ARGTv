@@ -1,9 +1,10 @@
 import express from 'express';
+import axios from 'axios';
 import * as tmdb from '../services/tmdb.js';
 
 const router = express.Router();
 
-const VIDSRC_BASE = "https://vidsrc.mov";
+const CINEPRO_BASE = "https://argtv.onrender.com";
 
 router.get('/', async (req, res) => {
   try {
@@ -35,14 +36,38 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// VidSrc embed URL para WebView
-router.get('/:id/embed', async (req, res) => {
+// CinePro stream - devuelve URL limpia para ExoPlayer
+router.get('/:id/stream', async (req, res) => {
   try {
     const { id } = req.params;
-    const embedUrl = `${VIDSRC_BASE}/embed/movie/${id}`;
-    res.json({ url: embedUrl, type: 'movie' });
+    
+    // Llamar a CinePro para obtener fuentes
+    const response = await axios.get(`${CINEPRO_BASE}/stream/movie/${id}`, {
+      timeout: 30000
+    });
+    
+    const sources = response.data.sources || [];
+    
+    // Elegir la mejor fuente (1080p > 720p > primera)
+    const bestSource = sources
+      .filter(s => s.type === 'hls')
+      .sort((a, b) => {
+        const qualA = parseInt(a.quality?.replace('p', '') || '0');
+        const qualB = parseInt(b.quality?.replace('p', '') || '0');
+        return qualB - qualA;
+      })[0];
+    
+    if (bestSource) {
+      res.json({
+        url: bestSource.url,
+        quality: bestSource.quality,
+        headers: bestSource.headers
+      });
+    } else {
+      res.status(404).json({ error: 'No stream available' });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Error getting embed', message: error.message });
+    res.status(500).json({ error: 'Stream error', message: error.message });
   }
 });
 

@@ -82,29 +82,57 @@ class ApiClient(private val baseUrl: String = "https://arg-tv.vercel.app") {
         }
     }
 
-    suspend fun getMovieEmbedUrl(tmdbId: String): String = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/api/movies/$tmdbId/embed")
-            .build()
-        
-        client.newCall(request).execute().use { response ->
-            val body = response.body?.string() ?: "{}"
-            val obj = JSONObject(body)
-            obj.getString("url")
+    suspend fun getMovieStreamData(tmdbId: String): StreamData? = withContext(Dispatchers.IO) {
+        try {
+            val request = Request.Builder()
+                .url("$baseUrl/api/movies/$tmdbId/stream")
+                .build()
+            
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: "{}"
+                val obj = JSONObject(body)
+                val url = obj.optString("url").takeIf { it.isNotEmpty() && it != "null" }
+                val quality = obj.optString("quality")
+                val headersObj = obj.optJSONObject("headers")
+                val headers = mutableMapOf<String, String>()
+                if (headersObj != null) {
+                    headersObj.keys().forEach { key ->
+                        headers[key] = headersObj.getString(key)
+                    }
+                }
+                if (url != null) StreamData(url, quality, headers) else null
+            }
+        } catch (e: Exception) {
+            null
         }
     }
 
-    suspend fun getSeriesEmbedUrl(tmdbId: String): String = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url("$baseUrl/api/series/$tmdbId/embed")
-            .build()
-        
-        client.newCall(request).execute().use { response ->
-            val body = response.body?.string() ?: "{}"
-            val obj = JSONObject(body)
-            obj.getString("url")
+    suspend fun getSeriesStreamData(tmdbId: String, season: String = "1", episode: String = "1"): StreamData? = withContext(Dispatchers.IO) {
+        try {
+            val request = Request.Builder()
+                .url("$baseUrl/api/series/$tmdbId/stream?season=$season&episode=$episode")
+                .build()
+            
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: "{}"
+                val obj = JSONObject(body)
+                val url = obj.optString("url").takeIf { it.isNotEmpty() && it != "null" }
+                val quality = obj.optString("quality")
+                val headersObj = obj.optJSONObject("headers")
+                val headers = mutableMapOf<String, String>()
+                if (headersObj != null) {
+                    headersObj.keys().forEach { key ->
+                        headers[key] = headersObj.getString(key)
+                    }
+                }
+                if (url != null) StreamData(url, quality, headers) else null
+            }
+        } catch (e: Exception) {
+            null
         }
     }
+
+    data class StreamData(val url: String, val quality: String, val headers: Map<String, String>)
 
     suspend fun getSeries(page: Int = 1): List<MediaApi> = withContext(Dispatchers.IO) {
         val request = Request.Builder()
