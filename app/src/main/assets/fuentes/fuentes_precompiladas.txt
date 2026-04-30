@@ -1,0 +1,5 @@
+# Edita este archivo antes de compilar el APK.
+# Agrega una URL por linea.
+# Ejemplos:
+# https://sitio.com/lista.m3u
+# https://sitio.com/lista.m3u8
