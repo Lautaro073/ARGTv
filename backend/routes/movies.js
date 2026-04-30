@@ -36,19 +36,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// CinePro stream - devuelve URL limpia para ExoPlayer
-router.keep('/:id/stream', async (req, res) => {
+router.get('/:id/stream', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Llamar a CinePro para obtener fuentes
-    const response = await axios.get(`${CINEPRO_BASE}/movie/${id}`, {
+    const response = await axios. get(`${CINEPRO_BASE}/movie/${id}`, {
       timeout: 30000
     });
-    
     const sources = response.data.sources || [];
-    
-    // Elegir la mejor fuente (1080p > 720p > primera)
     const bestSource = sources
       .filter(s => s.type === 'hls')
       .sort((a, b) => {
@@ -56,7 +50,6 @@ router.keep('/:id/stream', async (req, res) => {
         const qualB = parseInt(b.quality?.replace('p', '') || '0');
         return qualB - qualA;
       })[0];
-    
     if (bestSource) {
       res.json({
         url: bestSource.url,
