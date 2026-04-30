@@ -11,7 +11,6 @@ const STREAM_HEADERS = {
 
 router.get('/:slug', async (req, res) => {
   try {
-    // Always get fresh URL (no cache for streams)
     clearCache();
     const streamUrl = await getStreamUrl(req.params.slug);
     res.json({ 
@@ -23,25 +22,38 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// Proxy endpoint - streams through backend to avoid CORS
+// Proxy con manejo de headers - evitar token expirecido
 router.get('/:slug/proxy', async (req, res) => {
   try {
     clearCache();
     const streamUrl = await getStreamUrl(req.params.slug);
     
-    // Fetch and forward the stream
     const response = await axios.get(streamUrl, {
       headers: STREAM_HEADERS,
       responseType: 'stream',
-      timeout: 30000
+      timeout: 30000,
+      maxRedirects: 5
     });
     
-    res.setHeader('Content-Type', response.headers['content-type'] || 'application/vnd.apple.mpegurl');
+    res.setHeader('Content-Type', 'application/x-mpegURL');
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', '*');
     
     response.data.pipe(res);
   } catch (error) {
-    res.status(500).json({ error: 'Stream proxy error', message: error.message });
+    console.error('Proxy error:', error.message);
+    res.status(500).json({ error: 'Proxy error', message: error.message });
+  }
+});
+
+// Obtener URLs frescas siempre
+router.get('/:slug/fresh', async (req, res) => {
+  try {
+    clearCache();
+    const streamUrl = await getStreamUrl(req.params.slug);
+    res.json({ url: streamUrl });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
