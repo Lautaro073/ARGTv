@@ -82,6 +82,30 @@ class ApiClient(private val baseUrl: String = "https://arg-tv.vercel.app") {
         }
     }
 
+    suspend fun getMovieEmbedUrl(tmdbId: String): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/movies/$tmdbId/embed")
+            .build()
+        
+        client.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: "{}"
+            val obj = JSONObject(body)
+            obj.getString("url")
+        }
+    }
+
+    suspend fun getSeriesEmbedUrl(tmdbId: String): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("$baseUrl/api/series/$tmdbId/embed")
+            .build()
+        
+        client.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: "{}"
+            val obj = JSONObject(body)
+            obj.getString("url")
+        }
+    }
+
     suspend fun getSeries(page: Int = 1): List<MediaApi> = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url("$baseUrl/api/series?page=$page")
