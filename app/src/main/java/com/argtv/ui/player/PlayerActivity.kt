@@ -9,7 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.datasource.DefaultHttpDataSource
 import com.argtv.R
 
@@ -20,6 +22,11 @@ class PlayerActivity : AppCompatActivity() {
     
     private val prefs by lazy { getSharedPreferences("argtv_progress", Context.MODE_PRIVATE) }
 
+    companion object {
+        private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        private const val REFERER = "https://tvtvhd.com/"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -29,54 +36,40 @@ class PlayerActivity : AppCompatActivity() {
         val channelUrl: String = intent.getStringExtra("stream_url") ?: ""
         val channelName: String = intent.getStringExtra("channel_name") ?: "Unknown"
         val channelId: String = intent.getStringExtra("channel_id") ?: channelUrl
-        
-        // Get headers from intent
-        val headers = mutableMapOf<String, String>()
-        intent.extras?.keySet()?.forEach { key ->
-            if (key.startsWith("header_")) {
-                headers[key.removePrefix("header_")] = intent.getStringExtra(key) ?: ""
-            }
-        }
 
-        Log.d(TAG, "Loading: $channelName")
-        Log.d(TAG, "URL: $channelUrl")
-        Log.d(TAG, "Headers: $headers")
+        Log.d(TAG, "Playing: $channelName  URL: $channelUrl")
         
         if (channelUrl.isNotEmpty()) {
             Toast.makeText(this, "Cargando: $channelName", Toast.LENGTH_SHORT).show()
-            initializePlayer(channelUrl, channelId, headers)
+            initializePlayer(channelUrl, channelId)
         } else {
-            Toast.makeText(this, "URL vacía", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Stream no disponible", Toast.LENGTH_LONG).show()
             finish()
         }
     }
 
-    private fun initializePlayer(url: String, channelId: String, headers: Map<String, String>) {
+    private fun initializePlayer(url: String, channelId: String) {
         try {
-            // Default headers
-            val defaultHeaders = mapOf(
-                "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                "Referer" to "https://tvtvhd.com/",
-                "Origin" to "https://tvtvhd.com"
-            )
-            
-            // Merge with provided headers
-            val mergedHeaders = defaultHeaders + headers
-            
-            val requestProperties = mergedHeaders.entries
-                .filter { it.key.lowercase() != "user-agent" }
-                .associate { it.key to it.value }
-            
-            val userAgent = mergedHeaders["User-Agent"] ?: defaultHeaders["User-Agent"]!!
-
+            // Configuración de headers como localTv
             val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-                .setUserAgent(userAgent)
+                .setUserAgent(USER_AGENT)
                 .setAllowCrossProtocolRedirects(true)
-                .setDefaultRequestProperties(requestProperties)
+                .setDefaultRequestProperties(mapOf(
+                    "Referer" to REFERER,
+                    "Origin" to "https://tvtvhd.com"
+                ))
+                .setConnectTimeoutMs(15000)
+                .setReadTimeoutMs(15000)
+
+            val loadControl = DefaultLoadControl.Builder()
+                .setBufferDurationsMs(1000, 15000, 500, 1000)
+                .build()
 
             val mediaItem = MediaItem.fromUri(url)
 
             player = ExoPlayer.Builder(this)
+                .setMediaSourceFactory(DefaultMediaSourceFactory(httpDataSourceFactory))
+                .setLoadControl(loadControl)
                 .build()
                 .apply {
                     addListener(playerListener)
@@ -84,6 +77,7 @@ class PlayerActivity : AppCompatActivity() {
                     
                     val savedPosition = prefs.getLong(channelId, 0)
                     if (savedPosition > 0 && savedPosition < 100000000) {
+                        Log.d(TAG, "Resuming from: $savedPosition")
                         seekTo(savedPosition)
                     }
                     
@@ -109,12 +103,13 @@ class PlayerActivity : AppCompatActivity() {
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(state: Int) {
             Log.d(TAG, "State: $state")
-            runOnUiThread {
-                when (state) {
-                    Player.STATE_BUFFERING -> Log.d(TAG, "Buffering...")
-                    Player.STATE_READY -> Toast.makeText(this@PlayerActivity, "Reproduciendo", Toast.LENGTH_SHORT).show()
-                    Player.STATE_ENDED -> Log.d(TAG, "Ended")
-                    else -> {}
+            when (state) {
+                Player.STATE_BUFFERING -> runOnUiThread { 
+                    Toast.makeText(this@PlayerActivity, "Buffering...", Toast.LENGTH_SHORT).show() 
+                }
+                Player.STATE_READY -> Log.d(TAG, "Ready to play")
+                Player.STATE_ENDED -> runOnUiThread { 
+                    Toast.makeText(this@PlayerActivity, "Ended", Toast.LENGTH_SHORT).show() 
                 }
             }
         }
@@ -126,7 +121,8 @@ class PlayerActivity : AppCompatActivity() {
                     PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED -> "Sin conexión"
                     PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> "Timeout"
                     PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND -> "No encontrado"
-                    PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED -> "Formato no soportado"
+                    PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED -> "Formato"
+                    PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED -> "Manifest"
                     else -> error.message ?: "Error"
                 }
                 Toast.makeText(this@PlayerActivity, "Error: $msg", Toast.LENGTH_LONG).show()
@@ -136,21 +132,20 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        savePosition()
+        player?.let { if (it.isPlaying) savePosition() }
     }
 
     override fun onStop() {
         super.onStop()
-        savePosition()
+        player?.let { if (it.isPlaying) savePosition() }
     }
     
     private fun savePosition() {
         player?.let { p ->
-            if (p.isPlaying) {
-                val pos = p.currentPosition
-                val id = intent.getStringExtra("channel_id") ?: intent.getStringExtra("stream_url") ?: return
-                prefs.edit().putLong(id, pos).apply()
-            }
+            val pos = p.currentPosition
+            val id = intent.getStringExtra("channel_id") ?: intent.getStringExtra("stream_url") ?: return
+            prefs.edit().putLong(id, pos).apply()
+            Log.d(TAG, "Saved: $pos")
         }
     }
 
@@ -161,7 +156,6 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        savePosition()
         player?.release()
         player = null
     }
